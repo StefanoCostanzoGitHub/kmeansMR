@@ -1,84 +1,99 @@
 package main
 
 import (
-	"kmeansMR/mapReduce"
-	"kmeansMR/mapReduce/clusters"
 	"fmt"
+	"image/color"
+	utils "kmeansMR/cluster"
+	"log"
+	"net/rpc"
+	"os"
+	"strconv"
+
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg/draw"
-	"image/color"
-	"log"
-	"math/rand"
-	"os"
-	"time"
-	"net"
-    "net/http"
-    "net/rpc"
-	//"gonum.org/v1/plot"
 )
 
+var PORTSERVER string = "8001"
+
 func main() {
-	k := 10
-	rand.Seed(time.Now().UnixNano())
-
-	// set up a random two-dimensional data set (float64 values between 0.0 and 1.0)
-	// 1) CREATE OBSERVATIONS
-	var d clusters.Observations
-	for x := 0; x < 1024*10; x++ {
-		d = append(d, clusters.Coordinates{
-			rand.Float64(),
-			rand.Float64(),
-		})
+	// Analize input data
+	if len(os.Args) != 4 {
+		fmt.Printf("Usage: go run client.go [k] [fileObj] [ip] \n")
+		os.Exit(1)
 	}
-	fmt.Printf("%d data points\n", len(d))
 
-	// Partition the data points into 7 clusters
-	// 1) CREATE WORKERS
-	
-
-	// 2) CREATE KMEANS STRUCT. CONFIGURABLE
-	km := mapReduce.New()
-	// 3) INIT CHANNEL
-
-	// 4) CALL SUBROUTINE
-	cc, _ := km.Partition(d, k)
-
-	// 5) ANALIZE RESULTS
-	var centers [10][2]float64
-	for i, c := range cc {
-		centers[i][0], centers[i][1] = c.Center[0], c.Center[1]
-		fmt.Printf("Cluster: %d\n", i)
-		fmt.Printf("Centered at x: %.2f y: %.2f\n", centers[i][0], centers[i][1])
-
-		plotKmeans(centers)
-
-		/*
-			for _, p := range c.PointsInDimension(0) {
-				fmt.Printf("x: %.2f \n", p)
-			}
-		*/
-
-		// Plotter
-		/*
-			xys, err := readData("data.txt")
-			if err != nil {
-				log.Fatalf("Could not read.txt: %v", err)
-			}
-		*/
+	k, e := strconv.Atoi(os.Args[1])
+	file := os.Args[2]
+	ip := os.Args[3]
+	if e != nil {
+		fmt.Printf("k values is not correct!")
+		os.Exit(1)
 	}
+
+	printBefore(k, file)
+
+	// Open Rpc connection
+	client, err := rpc.Dial("tcp", ip+":"+PORTSERVER)
+	defer client.Close()
+	if err != nil {
+		log.Fatal("Connection error: ", err)
+	}
+
+	var out utils.Output
+	// Call function Partition
+	err = client.Call("API.MapReduce", utils.Input{K: k, File: file}, &out)
+	if err != nil {
+		log.Fatal("Error in API.MapReduce: ", err)
+	}
+
+	// print results console
+	printAfter(out.Cc, out.NPoints ,out.NumIters)
+
+	// plot chart centers
+	plotKmeans(out.Cc, k, out.NPoints)
 }
 
-func plotKmeans(centers [10][2]float64) {
+func printBefore(k int, file string){
+	fmt.Println("*****************************************************************")
+	fmt.Println("*****************************************************************")
+	fmt.Println("***********************                      ********************")
+	fmt.Println("***********************        Client        ********************")
+	fmt.Println("***********************                      ********************")
+	fmt.Println("*****************************************************************")
+	fmt.Println("*****************************************************************")
+
+	fmt.Println("")
+	fmt.Println("k selected:", k, " path:", file)
+	fmt.Println("----------------------  Start execution   -----------------------")
+	fmt.Println("")
+}
+
+func printAfter(cc utils.Clusters, nPoints int, numIters int){
+	fmt.Println("dataset analized")
+	fmt.Println("-- number points: ", nPoints, ", number iterations: ", numIters)
+	fmt.Println("")
+
+	// Analize output data
+	for i, c := range cc {
+		fmt.Printf("Cluster: %d\n", i)
+		fmt.Printf("-> Centered at x: %.2f y: %.2f\n", c.Center[0], c.Center[1])
+	}
+	fmt.Println("")
+}
+
+func plotKmeans(cc utils.Clusters, k int, nPoints int) {
+	/** Plot centers in Scatter plot **/
 	p := plot.New()
 
-	xys := make(plotter.XYs, len(centers))
-	for i, xy := range centers {
-		xys[i].X = xy[0]
-		xys[i].Y = xy[1]
+	xysCenters := make(plotter.XYs, k)
+	for i, c := range cc {
+		xysCenters[i].X = c.Center[0]
+		xysCenters[i].Y = c.Center[1]
 	}
 
-	s, err := plotter.NewScatter(xys)
+	s, err := plotter.NewScatter(xysCenters)
+
 	if err != nil {
 		log.Fatalf("could not create scatter: %v", err)
 		return
@@ -87,7 +102,7 @@ func plotKmeans(centers [10][2]float64) {
 	s.Color = color.RGBA{R: 255, A: 255}
 	p.Add(s)
 
-	wt, err := p.WriterTo(300, 300, "png")
+	wt, err := p.WriterTo(500, 500, "png")
 	if err != nil {
 		log.Fatalf("Could not create writer: %v", err)
 		return
