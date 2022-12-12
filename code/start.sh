@@ -25,5 +25,5 @@ then
 	exit 1
 fi
 
-NUMMAP=${1} MAXITER=${2} THRESHOLD=${3} docker compose up
+sudo NUMMAP=${1} MAXITER=${2} THRESHOLD=${3} docker-compose up
 
