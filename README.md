@@ -21,9 +21,8 @@ IMMAGINE MAP REDUCE
 ## AWS EC2 instance with Docker Containers
 Ansible service is used to automate the Docker installation and to copy the application code
 Aws Cli needs to be already configured.
-
 ```
-# To check the ec2 instance (optional): Inside ansible folder
+# To check the ec2 instance (optional): Inside ansible folder (set personal ip and key)
 ansible -i hosts.ini -m ping all
 
 # To execute ansible in ansible: Inside ansible folder
@@ -32,8 +31,13 @@ ansible-playbook -v -i hosts.ini deploy.yaml
 # Connect to the EC2 instance 
 ssh -i "key.pem" ubuntu@ip_instance 
 
-# To execute the whole application. Threshold = 1 is 0.0.001
+# enter code folder
+cd code
+
+# To execute the whole application: inside code folder. Threshold = 1 is 0.0.001
 ./start.sh [nMaps] [Threshold] [MaxIters] 
+#or
+sudo NUMMAP=[nMaps] MAXITER=[Threshold] THRESHOLD=[MaxIters]  docker-compose up
 ```
 
 ## Client execution
@@ -42,7 +46,7 @@ ssh -i "key.pem" ubuntu@ip_instance
 Go run client [k] [pathPoints] [ip master]
 ```
 example: 
-```go run client 10 ./points/rand10000.txt```
+```go run client 10 ./points/rand10000.txt 0.0.0.0```
 
 ## Test execution: Inside test folder
 ```Go run test.go [ip master]```
