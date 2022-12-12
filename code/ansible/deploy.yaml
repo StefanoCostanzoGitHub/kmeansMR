@@ -40,6 +40,6 @@
   tasks:
     - name: copy application directory
       copy:
-        src: "../"
+        src: "../../code"
         dest: "/home/ubuntu/"
       register: app
