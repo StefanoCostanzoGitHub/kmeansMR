@@ -150,7 +150,7 @@ func initMappers(dataset []utils.Coordinates) {
 		// Verify correct execution
 		for i := 0; i < numMapper; i++ {
 			ret = <-chInit
-			if ret != 0 {
+			if ret != -1 {
 				removeMapper(ret)
 				restart = true
 			}
@@ -174,7 +174,7 @@ func initObs(idxMap int, obs []utils.Coordinates, chInit chan int) {
 		chInit <- idxMap
 		return
 	}
-	chInit <- 0
+	chInit <- -1
 }
 
 // Initialize clusters reducer
