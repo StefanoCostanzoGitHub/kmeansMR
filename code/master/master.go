@@ -161,7 +161,7 @@ func initMappers(dataset []utils.Coordinates) {
 // Initialize mapper's observations
 func initObs(idxMap int, obs []utils.Coordinates, chInit chan int) {
 	// Open RPC connection with Mapper
-	mapper, err := rpc.Dial("tcp", "code-mapper-"+strconv.Itoa(idxMap+1)+":8000")
+	mapper, err := rpc.Dial("tcp", "code_mapper_"+strconv.Itoa(idxMap+1)+":8000")
 	defer mapper.Close()
 	if err != nil {
 		chInit <- idxMap
@@ -220,7 +220,7 @@ func threadRed(cc utils.Clusters, nPoints int, deltaThreshold float64, chInRed c
 // Manage mapper connection
 func threadMap(idxMap int, chInMap chan utils.InMap, chOutMap chan utils.OutMap) {
 	// Open RPC connection with Mapper
-	mapper, err := rpc.Dial("tcp", "code-mapper-"+strconv.Itoa(idxMap+1)+":8000")
+	mapper, err := rpc.Dial("tcp", "code_mapper_"+strconv.Itoa(idxMap+1)+":8000")
 	defer mapper.Close()
 	if err != nil {
 		return
