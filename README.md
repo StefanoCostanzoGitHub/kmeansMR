@@ -15,37 +15,45 @@ Infrastructure:
 
 
 # How to :computer:
+Set the mapreduce system to ec2 instances and run it:
 
-IMMAGINE MAP REDUCE 
+## AWS EC2 instance with Docker Containers 
+#### (only required for execution in ec2)
+Ansible service is used to automate the Docker installation and to copy the application code.
 
-## AWS EC2 instance with Docker Containers
-Ansible service is used to automate the Docker installation and to copy the application code
-Aws Cli needs to be already configured.
+**Preconditions**:
+
+_- Aws Cli needs to be already configured._
+
+_- Set personal ip and key._
+
+_- Execute commands inside ansible folder_
+1) To execute ansible: 
 ```
-# To check the ec2 instance (optional): Inside ansible folder (set personal ip and key)
-ansible -i hosts.ini -m ping all
-
-# To execute ansible in ansible: Inside ansible folder
 ansible-playbook -v -i hosts.ini deploy.yaml 
+```
+2) Connect to the EC2 instance 
+```
+ssh -i "[key.pem]" ubuntu@[ip_instance]
+```
 
-# Connect to the EC2 instance 
-ssh -i "key.pem" ubuntu@ip_instance 
-
-# enter code folder
-cd code
-
-# To execute the whole application: inside code folder. Threshold = 1 is 0.0.001
+## Start the application.
+_Threshold = 1 is 0.001_
+```
 ./start.sh [nMaps] [Threshold] [MaxIters] 
-#or
+```
+or
+```
 sudo NUMMAP=[nMaps] MAXITER=[Threshold] THRESHOLD=[MaxIters]  docker-compose up
 ```
 
 ## Client execution
 ```
-# Inside the points folder are present some example dataset
 Go run client [k] [pathPoints] [ip master]
 ```
-example: 
+Inside the points folder are present some example dataset
+
+Example: 
 ```go run client 10 ./points/rand10000.txt 0.0.0.0```
 
 ## Test execution: Inside test folder
