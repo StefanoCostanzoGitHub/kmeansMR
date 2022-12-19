@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $# -ne 4] 
+if [ $# -ne 3 ] 
 then 
     echo "Usage: ${0} NMAPPERS MAXITER THRESHOLD(1 = 0.001%)"
     exit 1
