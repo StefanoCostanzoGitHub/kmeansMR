@@ -51,6 +51,8 @@ type API int
 
 var km Kmeans
 
+var mapPath string = "code_mapper_"
+
 // For testing: Configure kmeans struct
 func (a *API) SetKmeans(input utils.TestInput, reply *int) error {
 	var e error
@@ -126,7 +128,6 @@ func fillDataset(path string) []utils.Coordinates {
 func initMappers(dataset []utils.Coordinates) {
 	restart := true
 	chInit := make(chan int)
-	defer close(chInit)
 	var ret int
 
 	// Loop until all mappers execute properly
@@ -161,12 +162,12 @@ func initMappers(dataset []utils.Coordinates) {
 // Initialize mapper's observations
 func initObs(idxMap int, obs []utils.Coordinates, chInit chan int) {
 	// Open RPC connection with Mapper
-	mapper, err := rpc.Dial("tcp", "code_mapper_"+strconv.Itoa(idxMap+1)+":8000")
-	defer mapper.Close()
+	mapper, err := rpc.Dial("tcp", mapPath+strconv.Itoa(idxMap+1)+":8000")
 	if err != nil {
 		chInit <- idxMap
 		return
 	}
+	defer mapper.Close()
 
 	// RPC call
 	err = mapper.Call("API.InitObs", obs, nil)
@@ -181,10 +182,10 @@ func initObs(idxMap int, obs []utils.Coordinates, chInit chan int) {
 func initReducer(cc utils.Clusters) {
 	// Open RPC connection with Reducer
 	reducer, err := rpc.Dial("tcp", "reducer:8000")
-	defer reducer.Close()
 	if err != nil {
 		log.Fatal("Connection reducer error: ", err)
 	}
+	defer reducer.Close()
 
 	// RPC call
 	err = reducer.Call("API.InitReducer", cc, nil)
@@ -197,10 +198,10 @@ func initReducer(cc utils.Clusters) {
 func threadRed(cc utils.Clusters, nPoints int, deltaThreshold float64, chInRed chan utils.InRed, chOutRed chan utils.OutRed) {
 	// Open RPC connection with Reducer
 	reducer, err := rpc.Dial("tcp", "reducer:8000")
-	defer reducer.Close()
 	if err != nil {
 		log.Fatal("Connection reducer error: ", err)
 	}
+	defer reducer.Close()
 
 	for {
 		var retVal utils.OutRed
@@ -220,11 +221,11 @@ func threadRed(cc utils.Clusters, nPoints int, deltaThreshold float64, chInRed c
 // Manage mapper connection
 func threadMap(idxMap int, chInMap chan utils.InMap, chOutMap chan utils.OutMap) {
 	// Open RPC connection with Mapper
-	mapper, err := rpc.Dial("tcp", "code_mapper_"+strconv.Itoa(idxMap+1)+":8000")
-	defer mapper.Close()
+	mapper, err := rpc.Dial("tcp", mapPath+strconv.Itoa(idxMap+1)+":8000")
 	if err != nil {
 		return
 	}
+	defer mapper.Close()
 
 	// Iterations
 	for {
