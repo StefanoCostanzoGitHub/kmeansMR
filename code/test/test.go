@@ -17,9 +17,9 @@ import (
 var PORT string = "8001"
 var NMAPS [8]int = [8]int{1, 2, 3, 4, 5, 6, 7, 8}
 var THRSHOLD float64 = 0.01
-var MAXITER int = 50
+var MAXITER int = 100
 
-var KS [3]int = [3]int{10, 50, 100}
+var KS [3]int = [3]int{5, 10, 20}
 var PATHS [1]string = [1]string{"./points/rand10000.txt"}
 
 type result struct {
